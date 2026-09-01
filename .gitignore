@@ -1,0 +1,12 @@
+# msbuild output directories
+**/bin/
+**/obj/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# Exported solution packages (rebuilt from src/ via pac solution pack/export)
+*.zip
+
+# Local Claude Code settings (machine-specific)
+.claude/settings.local.json
