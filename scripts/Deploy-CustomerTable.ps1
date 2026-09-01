@@ -246,6 +246,30 @@ if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName
     Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $tagsAttr | Out-Null
 }
 
+if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName 'cmd_priority') {
+    Write-Host "Column cmd_priority already exists, skipping." -ForegroundColor Yellow
+} else {
+    Write-Host "Creating column cmd_priority..." -ForegroundColor Cyan
+    $priorityAttr = @{
+        '@odata.type'  = 'Microsoft.Dynamics.CRM.PicklistAttributeMetadata'
+        SchemaName     = 'cmd_Priority'
+        RequiredLevel  = @{ Value = 'None' }
+        DisplayName    = New-StringLabel 'Priority'
+        OptionSet      = @{
+            '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
+            IsGlobal        = $false
+            OptionSetType   = 'Picklist'
+            Options         = @(
+                @{ Value = 1; Label = New-StringLabel 'Low' }
+                @{ Value = 2; Label = New-StringLabel 'Medium' }
+                @{ Value = 3; Label = New-StringLabel 'High' }
+            )
+        }
+        DefaultFormValue = 2
+    }
+    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $priorityAttr | Out-Null
+}
+
 # 3. Publish all customizations so the new table/columns are usable.
 Write-Host "Publishing customizations..." -ForegroundColor Cyan
 Invoke-Dataverse -Method POST -Path 'PublishAllXml' -Body @{} | Out-Null
@@ -265,6 +289,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     <attribute name="cmd_company" />
     <attribute name="cmd_status" />
     <attribute name="cmd_tags" />
+    <attribute name="cmd_priority" />
     <order attribute="cmd_name" descending="false" />
     <filter type="and">
       <condition attribute="statecode" operator="eq" value="0" />
@@ -281,6 +306,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     <cell name="cmd_company" width="200" />
     <cell name="cmd_status" width="120" />
     <cell name="cmd_tags" width="180" />
+    <cell name="cmd_priority" width="120" />
   </row>
 </grid>
 '@

@@ -40,9 +40,8 @@ dotnet tool run pac auth create --url https://<your-org>.crm.dynamics.com
 ./scripts/Deploy-CustomerTable.ps1 -EnvironmentUrl https://<your-org>.crm.dynamics.com
 ```
 
-This creates `cmd_customer` with the columns in `docs/customer-table-schema.md`
-(Email, Phone, Company, Address, Status, Notes) and an "Active Customers" view.
-Re-running it is safe — it skips anything that already exists.
+This creates `cmd_customer` with the columns listed in `docs/customer-table-schema.md`
+and an "Active Customers" view. Re-running it is safe — it skips anything that already exists.
 
 ## 2. Build the app in Studio
 
