@@ -45,7 +45,17 @@ if (-not (Get-AzContext)) {
 }
 
 function Get-DataverseToken {
-    (Get-AzAccessToken -ResourceUrl $EnvironmentUrl).Token
+    $token = (Get-AzAccessToken -ResourceUrl $EnvironmentUrl).Token
+    # Az.Accounts 5.x returns Token as a SecureString; older versions return plain text.
+    if ($token -is [System.Security.SecureString]) {
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($token)
+        try {
+            return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+        } finally {
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+        }
+    }
+    return $token
 }
 
 function Invoke-Dataverse {
@@ -122,11 +132,11 @@ if (Test-TableExists -LogicalName 'cmd_customer') {
         IsActivity               = $false
         HasNotes                 = $true
         HasActivities            = $false
-        PrimaryNameAttribute     = 'cmd_name'
         Attributes               = @(
             @{
                 '@odata.type'  = 'Microsoft.Dynamics.CRM.StringAttributeMetadata'
                 SchemaName     = 'cmd_Name'
+                IsPrimaryName  = $true
                 RequiredLevel  = @{ Value = 'ApplicationRequired' }
                 MaxLength      = 200
                 FormatName     = @{ Value = 'Text' }
@@ -223,7 +233,7 @@ if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName
         OptionSet      = @{
             '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
             IsGlobal        = $false
-            OptionSetType   = 'MultiSelectPicklist'
+            OptionSetType   = 'Picklist'
             Options         = @(
                 @{ Value = 1; Label = New-StringLabel 'VIP' }
                 @{ Value = 2; Label = New-StringLabel 'New' }
