@@ -211,6 +211,31 @@ if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName
     Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $choiceAttr | Out-Null
 }
 
+if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName 'cmd_tags') {
+    Write-Host "Column cmd_tags already exists, skipping." -ForegroundColor Yellow
+} else {
+    Write-Host "Creating column cmd_tags..." -ForegroundColor Cyan
+    $tagsAttr = @{
+        '@odata.type'  = 'Microsoft.Dynamics.CRM.MultiSelectPicklistAttributeMetadata'
+        SchemaName     = 'cmd_Tags'
+        RequiredLevel  = @{ Value = 'None' }
+        DisplayName    = New-StringLabel 'Tags'
+        OptionSet      = @{
+            '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
+            IsGlobal        = $false
+            OptionSetType   = 'MultiSelectPicklist'
+            Options         = @(
+                @{ Value = 1; Label = New-StringLabel 'VIP' }
+                @{ Value = 2; Label = New-StringLabel 'New' }
+                @{ Value = 3; Label = New-StringLabel 'High Value' }
+                @{ Value = 4; Label = New-StringLabel 'At Risk' }
+                @{ Value = 5; Label = New-StringLabel 'Referral' }
+            )
+        }
+    }
+    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $tagsAttr | Out-Null
+}
+
 # 3. Publish all customizations so the new table/columns are usable.
 Write-Host "Publishing customizations..." -ForegroundColor Cyan
 Invoke-Dataverse -Method POST -Path 'PublishAllXml' -Body @{} | Out-Null
@@ -229,6 +254,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     <attribute name="cmd_phonenumber" />
     <attribute name="cmd_company" />
     <attribute name="cmd_status" />
+    <attribute name="cmd_tags" />
     <order attribute="cmd_name" descending="false" />
     <filter type="and">
       <condition attribute="statecode" operator="eq" value="0" />
@@ -244,6 +270,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     <cell name="cmd_phonenumber" width="150" />
     <cell name="cmd_company" width="200" />
     <cell name="cmd_status" width="120" />
+    <cell name="cmd_tags" width="180" />
   </row>
 </grid>
 '@
