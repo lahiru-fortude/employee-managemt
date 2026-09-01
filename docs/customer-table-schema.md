@@ -12,13 +12,14 @@ Publisher prefix: `cmd` (CustomerManagementDemo, set in `src/CustomerManagementS
 | `cmd_address`            | Address       | Single line of text            | max length 250 |
 | `cmd_status`             | Status        | Choice (option set)            | Prospect (1), Active (2), Inactive (3) — default Prospect |
 | `cmd_tags`               | Tags          | Choices (multi-select option set) | VIP (1), New (2), High Value (3), At Risk (4), Referral (5) — for segmenting customers |
+| `cmd_priority`           | Priority      | Choice (option set)            | Low (1), Medium (2), High (3) — default Medium |
 | `cmd_notes`              | Notes         | Multiple lines of text (memo)  | max length 2000 |
 
 Plus the standard Dataverse system columns (`createdon`, `modifiedon`, `ownerid`, `statecode`, `statuscode`, etc.) that every table gets for free.
 
 ## View
 
-`Active Customers` — a public saved query on `cmd_customer` filtering `statecode = 0` (Active), showing Customer Name, Email, Phone, Company, Status, Tags.
+`Active Customers` — a public saved query on `cmd_customer` filtering `statecode = 0` (Active), showing Customer Name, Email, Phone, Company, Status, Tags, Priority.
 
 ## App
 
