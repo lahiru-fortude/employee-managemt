@@ -249,6 +249,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     Write-Host "View 'Active Customers' already exists, skipping." -ForegroundColor Yellow
 } else {
     Write-Host "Creating view 'Active Customers'..." -ForegroundColor Cyan
+    # Column list here must match docs/customer-table-schema.md's checklist — see doc for the full sync list.
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="cmd_customer">
