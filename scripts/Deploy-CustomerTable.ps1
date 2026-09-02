@@ -159,6 +159,19 @@ function New-StringLabel([string]$Text) {
     }
 }
 
+function New-CustomerColumn {
+    param(
+        [Parameter(Mandatory = $true)][string]$LogicalName,
+        [Parameter(Mandatory = $true)][object]$Attribute
+    )
+    if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName $LogicalName) {
+        Write-Host "Column $LogicalName already exists, skipping." -ForegroundColor Yellow
+        return
+    }
+    Write-Host "Creating column $LogicalName..." -ForegroundColor Cyan
+    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $Attribute | Out-Null
+}
+
 $stringColumns = @(
     @{ Logical = 'cmd_emailaddress'; Schema = 'cmd_EmailAddress'; Display = 'Email';   MaxLength = 100; Format = 'Email' }
     @{ Logical = 'cmd_phonenumber';  Schema = 'cmd_PhoneNumber';  Display = 'Phone';    MaxLength = 50;  Format = 'Phone' }
@@ -167,11 +180,6 @@ $stringColumns = @(
 )
 
 foreach ($col in $stringColumns) {
-    if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName $col.Logical) {
-        Write-Host "Column $($col.Logical) already exists, skipping." -ForegroundColor Yellow
-        continue
-    }
-    Write-Host "Creating column $($col.Logical)..." -ForegroundColor Cyan
     $attr = @{
         '@odata.type'  = 'Microsoft.Dynamics.CRM.StringAttributeMetadata'
         SchemaName     = $col.Schema
@@ -180,71 +188,56 @@ foreach ($col in $stringColumns) {
         FormatName     = @{ Value = $col.Format }
         DisplayName    = New-StringLabel $col.Display
     }
-    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $attr | Out-Null
+    New-CustomerColumn -LogicalName $col.Logical -Attribute $attr
 }
 
-if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName 'cmd_notes') {
-    Write-Host "Column cmd_notes already exists, skipping." -ForegroundColor Yellow
-} else {
-    Write-Host "Creating column cmd_notes..." -ForegroundColor Cyan
-    $memoAttr = @{
-        '@odata.type'  = 'Microsoft.Dynamics.CRM.MemoAttributeMetadata'
-        SchemaName     = 'cmd_Notes'
-        RequiredLevel  = @{ Value = 'None' }
-        MaxLength      = 2000
-        DisplayName    = New-StringLabel 'Notes'
-    }
-    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $memoAttr | Out-Null
+$memoAttr = @{
+    '@odata.type'  = 'Microsoft.Dynamics.CRM.MemoAttributeMetadata'
+    SchemaName     = 'cmd_Notes'
+    RequiredLevel  = @{ Value = 'None' }
+    MaxLength      = 2000
+    DisplayName    = New-StringLabel 'Notes'
 }
+New-CustomerColumn -LogicalName 'cmd_notes' -Attribute $memoAttr
 
-if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName 'cmd_status') {
-    Write-Host "Column cmd_status already exists, skipping." -ForegroundColor Yellow
-} else {
-    Write-Host "Creating column cmd_status..." -ForegroundColor Cyan
-    $choiceAttr = @{
-        '@odata.type'  = 'Microsoft.Dynamics.CRM.PicklistAttributeMetadata'
-        SchemaName     = 'cmd_Status'
-        RequiredLevel  = @{ Value = 'None' }
-        DisplayName    = New-StringLabel 'Status'
-        OptionSet      = @{
-            '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
-            IsGlobal        = $false
-            OptionSetType   = 'Picklist'
-            Options         = @(
-                @{ Value = 1; Label = New-StringLabel 'Prospect' }
-                @{ Value = 2; Label = New-StringLabel 'Active' }
-                @{ Value = 3; Label = New-StringLabel 'Inactive' }
-            )
-        }
-        DefaultFormValue = 1
+$choiceAttr = @{
+    '@odata.type'  = 'Microsoft.Dynamics.CRM.PicklistAttributeMetadata'
+    SchemaName     = 'cmd_Status'
+    RequiredLevel  = @{ Value = 'None' }
+    DisplayName    = New-StringLabel 'Status'
+    OptionSet      = @{
+        '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
+        IsGlobal        = $false
+        OptionSetType   = 'Picklist'
+        Options         = @(
+            @{ Value = 1; Label = New-StringLabel 'Prospect' }
+            @{ Value = 2; Label = New-StringLabel 'Active' }
+            @{ Value = 3; Label = New-StringLabel 'Inactive' }
+        )
     }
-    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $choiceAttr | Out-Null
+    DefaultFormValue = 1
 }
+New-CustomerColumn -LogicalName 'cmd_status' -Attribute $choiceAttr
 
-if (Test-AttributeExists -EntityLogicalName 'cmd_customer' -AttributeLogicalName 'cmd_tags') {
-    Write-Host "Column cmd_tags already exists, skipping." -ForegroundColor Yellow
-} else {
-    Write-Host "Creating column cmd_tags..." -ForegroundColor Cyan
-    $tagsAttr = @{
-        '@odata.type'  = 'Microsoft.Dynamics.CRM.MultiSelectPicklistAttributeMetadata'
-        SchemaName     = 'cmd_Tags'
-        RequiredLevel  = @{ Value = 'None' }
-        DisplayName    = New-StringLabel 'Tags'
-        OptionSet      = @{
-            '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
-            IsGlobal        = $false
-            OptionSetType   = 'Picklist'
-            Options         = @(
-                @{ Value = 1; Label = New-StringLabel 'VIP' }
-                @{ Value = 2; Label = New-StringLabel 'New' }
-                @{ Value = 3; Label = New-StringLabel 'High Value' }
-                @{ Value = 4; Label = New-StringLabel 'At Risk' }
-                @{ Value = 5; Label = New-StringLabel 'Referral' }
-            )
-        }
+$tagsAttr = @{
+    '@odata.type'  = 'Microsoft.Dynamics.CRM.MultiSelectPicklistAttributeMetadata'
+    SchemaName     = 'cmd_Tags'
+    RequiredLevel  = @{ Value = 'None' }
+    DisplayName    = New-StringLabel 'Tags'
+    OptionSet      = @{
+        '@odata.type'   = 'Microsoft.Dynamics.CRM.OptionSetMetadata'
+        IsGlobal        = $false
+        OptionSetType   = 'Picklist'
+        Options         = @(
+            @{ Value = 1; Label = New-StringLabel 'VIP' }
+            @{ Value = 2; Label = New-StringLabel 'New' }
+            @{ Value = 3; Label = New-StringLabel 'High Value' }
+            @{ Value = 4; Label = New-StringLabel 'At Risk' }
+            @{ Value = 5; Label = New-StringLabel 'Referral' }
+        )
     }
-    Invoke-Dataverse -Method POST -Path "EntityDefinitions(LogicalName='cmd_customer')/Attributes" -Body $tagsAttr | Out-Null
 }
+New-CustomerColumn -LogicalName 'cmd_tags' -Attribute $tagsAttr
 
 # 3. Publish all customizations so the new table/columns are usable.
 Write-Host "Publishing customizations..." -ForegroundColor Cyan
@@ -256,6 +249,7 @@ if ($existingView -and $existingView.value.Count -gt 0) {
     Write-Host "View 'Active Customers' already exists, skipping." -ForegroundColor Yellow
 } else {
     Write-Host "Creating view 'Active Customers'..." -ForegroundColor Cyan
+    # Column list here must match docs/customer-table-schema.md's checklist — see doc for the full sync list.
     $fetchXml = @"
 <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
   <entity name="cmd_customer">

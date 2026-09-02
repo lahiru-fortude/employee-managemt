@@ -24,4 +24,9 @@ Plus the standard Dataverse system columns (`createdon`, `modifiedon`, `ownerid`
 
 `Customer Management` — a model-driven app exposing the `cmd_customer` table via the `Active Customers` view, with the default main form (Name, Email, Phone, Company, Address, Status, Notes).
 
-This spec is the source of truth for `scripts/Deploy-CustomerTable.ps1`. If you change the schema, update both.
+This spec is the source of truth for `scripts/Deploy-CustomerTable.ps1`. If you change the schema (add/remove/rename a column, change an option set, etc.), update every one of these in lockstep:
+
+1. The column table above (this file).
+2. The primary name column definition in the `Attributes` array of the entity-create block — `scripts/Deploy-CustomerTable.ps1:135`.
+3. The `$stringColumns` array (for simple single-line-of-text columns) — `scripts/Deploy-CustomerTable.ps1:175`. Columns with a different type (memo, choice, multi-select choice) are defined individually further down in the same section.
+4. The `<attribute>` list in `$fetchXml` and the `<cell>` list in `$layoutXml` for the "Active Customers" view — `scripts/Deploy-CustomerTable.ps1:252` and `:268`.
